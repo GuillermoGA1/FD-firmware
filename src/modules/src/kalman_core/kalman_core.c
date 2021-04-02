@@ -329,7 +329,10 @@ void kalmanCoreUpdateWithBaro(kalmanCoreData_t* this, float baroAsl, bool quadIs
 
 void kalmanCorePredict(kalmanCoreData_t* this, Axis3f *acc, Axis3f *gyro, float dt, bool quadIsFlying)
 {
-  /* Here we discretize (euler forward) and linearise the quadrocopter dynamics in order
+  /* Here we discretize (euler forward) an
+
+  // ====== COVARIANCE UPDATE ======
+  mat_mult(&Am, &this->d linearise the quadrocopter dynamics in order
    * to push the covariance forward.
    *
    * QUADROCOPTER DYNAMICS (see paper):

@@ -77,8 +77,8 @@ static float velMaxOverhead = 1.10f;
 
 static const float thrustScale = 1000.0f;
 
-static float kFFx = 10.0; // feedforward term for x direction [deg / m/s]
-static float kFFy = 10.0; // feedforward term for x direction [deg / m/s]
+static float kFFx = 0;//10.0; // feedforward term for x direction [deg / m/s]
+static float kFFy = 0; //10.0; // feedforward term for x direction [deg / m/s]
 
 float bank_roll = 0.0f; // for logging & debugging
 float bank_pitch = 0.0f;
@@ -368,7 +368,7 @@ void velocityControllerInBody(float* thrust, attitude_t *attitude, setpoint_t *s
   if (*thrust < this.thrustMin) {
     *thrust = this.thrustMin;
   }
-    // saturate
+    //saturate
   *thrust = constrain(*thrust, 0, UINT16_MAX);
 }
 

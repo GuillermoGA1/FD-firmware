@@ -3,8 +3,8 @@
 
 ## Setup for Bolt
 PLATFORM = cf2
-ESTIMATOR = complementary # use for RC flying
-# ESTIMATOR = kalman # only works when positioning system is available
+#ESTIMATOR = complementary # use for RC flying
+ESTIMATOR = kalman # only works when positioning system is available
 POWER_DISTRIBUTION = nimble_FD_PCB
 
 CFLAGS += -DMOTOR_M2_STARTUP=32767
