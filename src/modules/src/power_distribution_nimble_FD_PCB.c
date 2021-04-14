@@ -63,8 +63,8 @@ void powerDistributionInit(void)
   motorsInit(platformConfigGetMotorMapping());
   
   // values used for MAVLab order: #10, #14, #18
-  servoTrims.roll = 0.0;
-  servoTrims.pitch = 0.0;
+  servoTrims.roll = 0;
+  servoTrims.pitch = -0.05;
   servoTrims.yaw = 0.05;
 
   // values used for MAVLab order: #11
