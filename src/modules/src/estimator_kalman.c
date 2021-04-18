@@ -725,6 +725,11 @@ LOG_GROUP_START(kalman)
   LOG_ADD(LOG_FLOAT, q1, &coreData.q[1])
   LOG_ADD(LOG_FLOAT, q2, &coreData.q[2])
   LOG_ADD(LOG_FLOAT, q3, &coreData.q[3])
+  LOG_ADD(LOG_FLOAT, q0_aux, &coreData.Qmeasured[0])
+  LOG_ADD(LOG_FLOAT, q1_aux, &coreData.Qmeasured[1])
+  LOG_ADD(LOG_FLOAT, q2_aux, &coreData.Qmeasured[2])
+  LOG_ADD(LOG_FLOAT, q3_aux, &coreData.Qmeasured[3])
+
 
   STATS_CNT_RATE_LOG_ADD(rtUpdate, &updateCounter)
   STATS_CNT_RATE_LOG_ADD(rtPred, &predictionCounter)
