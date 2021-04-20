@@ -794,12 +794,12 @@ void kalmanCoreExternalizeState(const kalmanCoreData_t* this, state_t *state, co
    }; */
 
   if (RATE_DO_EXECUTE(ATTITUDE_UPDATE_RATE, tick)) {
-    /*sensfusion6UpdateQ(-gyro->z, -gyro->y, -gyro->x,
+    sensfusion6UpdateQ(-gyro->z, -gyro->y, -gyro->x,
                        -acc->z, -acc->y, -acc->x,
-                       ATTITUDE_UPDATE_DT);  */
+                       ATTITUDE_UPDATE_DT);  
 
     // Save attitude, adjusted for the legacy CF2 body coordinate system
-    //sensfusion6GetEulerRPY(&compl_roll, &compl_pitch, &compl_yaw);
+    sensfusion6GetEulerRPY(&compl_roll, &compl_pitch, &compl_yaw);
     
     // Save quaternion, hopefully one day this could be used in a better controller.
     // Note that this is not adjusted for the legacy coordinate system
@@ -810,19 +810,19 @@ void kalmanCoreExternalizeState(const kalmanCoreData_t* this, state_t *state, co
        .y = this->q[2],
        .z = this->q[3]
     }; 
-    /*sensfusion6GetQuaternion(
+   /*sensfusion6GetQuaternion(
       &state->attitudeQuaternion.x,
       &state->attitudeQuaternion.y,
       &state->attitudeQuaternion.z,
       &state->attitudeQuaternion.w);  */
 
-  }
-  /*state->attitude = (attitude_t){
+  } 
+  state->att_compl= (attitude_t){
     .timestamp = tick,
     .roll = compl_roll,
-    .pitch = -compl_pitch,
+    .pitch = compl_pitch,
     .yaw = compl_yaw
-    };  */
+    };  
 
   state->attitude = (attitude_t){
     .timestamp = tick,
