@@ -47,11 +47,11 @@ typedef struct {
 #define FILTER_LEVELS 5
 #define FILTER_NONE FILTER_LEVELS
 filterLevel_t filterLevels[FILTER_LEVELS] = {
-  {.acceptanceLevel = 0.4},
-  {.acceptanceLevel = 0.8},
-  {.acceptanceLevel = 1.2},
-  {.acceptanceLevel = 1.6},
-  {.acceptanceLevel = 2.0},
+  {.acceptanceLevel = 0.4}, //0.4
+  {.acceptanceLevel = 0.8}, //0.8
+  {.acceptanceLevel = 1.2}, //1.2
+  {.acceptanceLevel = 1.6}, //1.6
+  {.acceptanceLevel = 2.0}, //2.0
 };
 
 

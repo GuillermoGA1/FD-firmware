@@ -93,7 +93,7 @@
 #include "debug.h"
 #include "sensfusion6.h"
 
-// #define KALMAN_USE_BARO_UPDATE
+//#define KALMAN_USE_BARO_UPDATE
 
 
 /**

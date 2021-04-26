@@ -85,10 +85,15 @@ void kalmanCoreUpdateWithTDOA(kalmanCoreData_t* this, tdoaMeasurement_t *tdoa)
 
       bool sampleIsGood = outlierFilterValidateTdoaSteps(tdoa, error, &jacobian, &estimatedPosition);
       if (sampleIsGood) {
-        kalmanCoreScalarUpdate(this, &H, error, tdoa->stdDev);
+        if(z > 1.0f){
+          kalmanCoreScalarUpdate(this, &H, error, 0.8f*tdoa->stdDev);
+        }
+        else{
+          kalmanCoreScalarUpdate(this, &H, error, tdoa->stdDev);
+        }
       }
     }
   }
-
+  
   tdoaCount++;
 }

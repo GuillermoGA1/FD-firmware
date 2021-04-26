@@ -817,14 +817,14 @@ void kalmanCoreExternalizeState(const kalmanCoreData_t* this, state_t *state, co
       &state->attitudeQuaternion.w);  */
 
   } 
-  state->att_compl= (attitude_t){
+  state->att_compl = (attitude_t){
     .timestamp = tick,
     .roll = compl_roll,
     .pitch = compl_pitch,
     .yaw = compl_yaw
     };  
 
-  state->attitude = (attitude_t){
+  state->attitude= (attitude_t){
     .timestamp = tick,
     .roll = roll * RAD_TO_DEG,
     .pitch = -pitch*RAD_TO_DEG,
