@@ -76,6 +76,7 @@ typedef struct {
    * For more information, refer to the paper
    */
   float S[KC_STATE_DIM];
+  float K_vector[KC_STATE_DIM];
 
   // The quad's attitude as a quaternion (w,x,y,z)
   // We store as a quaternion to allow easy normalization (in comparison to a rotation matrix),

@@ -128,8 +128,8 @@ static const float stdDevInitialVelocity = 0.01;
 static const float stdDevInitialAttitude_rollpitch = 0.01;
 static const float stdDevInitialAttitude_yaw = 0.01;
 
-static float procNoiseAcc_xy = 0.5f;
-static float procNoiseAcc_z = 1.0f;
+static float procNoiseAcc_xy = 0.5f;  //0.5
+static float procNoiseAcc_z = 1.0f;   //1
 static float procNoiseVel = 0;
 static float procNoisePos = 0;
 static float procNoiseAtt = 0;
@@ -241,9 +241,11 @@ void kalmanCoreScalarUpdate(kalmanCoreData_t* this, arm_matrix_instance_f32 *Hm,
   ASSERT(!isnan(HPHR));
 
   // ====== MEASUREMENT UPDATE ======
+  
   // Calculate the Kalman gain and perform the state update
   for (int i=0; i<KC_STATE_DIM; i++) {
     K[i] = PHTd[i]/HPHR; // kalman gain = (PH' (HPH' + R )^-1)
+    this->K_vector[i] = K[i];
     this->S[i] = this->S[i] + K[i] * error; // state update
   }
   assertStateNotNaN(this);
