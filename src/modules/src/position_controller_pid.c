@@ -32,6 +32,7 @@
 #include "param.h"
 #include "pid.h"
 #include "num.h"
+#include "pm.h"
 #include "position_controller.h"
 
 struct pidInit_s {
@@ -59,7 +60,7 @@ struct this_s {
   struct pidAxis_s pidY;
   struct pidAxis_s pidZ;
 
-  uint16_t thrustBase; // approximate throttle needed when in perfect hover. More weight/older battery can use a higher value
+  float thrustBase; // approximate throttle needed when in perfect hover. More weight/older battery can use a higher value
   uint16_t thrustMin;  // Minimum thrust value to output
 };
 
@@ -87,6 +88,9 @@ float setpointx = 0.0f;
 float setpointy = 0.0f;
 float setpointvx = 0.0f;
 float setpointvy = 0.0f;
+
+float battery_voltage  = 0.0f;
+float thrustBase_adj = 0.0f;
 
 #define DT (float)(1.0f/POSITION_RATE)
 #define POSITION_LPF_CUTOFF_FREQ 5.0f
@@ -168,7 +172,7 @@ static struct this_s this = {
     .pid.dt = DT,
   },
 
-  .thrustBase = 27000,
+  .thrustBase = 88920,  //27000
   .thrustMin  = 15000,
 };
 #endif
@@ -225,7 +229,10 @@ void positionControllerInBodySingleLoop(float* thrust, attitude_t *attitude, set
   bank_pitch = attitude->pitch;
   
   // Scale the thrust and add feed forward term
-  *thrust = thrustRaw*thrustScale + this.thrustBase;
+
+  battery_voltage = pmGetBatteryVoltage();
+  thrustBase_adj = -6252.62f*battery_voltage + this.thrustBase;
+  *thrust = thrustRaw*thrustScale + thrustBase_adj;
   // Check for minimum thrust
   if (*thrust < this.thrustMin) {
     *thrust = this.thrustMin;
@@ -337,7 +344,9 @@ void velocityController(float* thrust, attitude_t *attitude, setpoint_t *setpoin
   // Thrust
   float thrustRaw = runPid(state->velocity.z, &this.pidVZ, setpoint->velocity.z, DT);
   // Scale the thrust and add feed forward term
-  *thrust = thrustRaw*thrustScale + this.thrustBase;
+  battery_voltage = pmGetBatteryVoltage();
+  thrustBase_adj = -6252.62f*battery_voltage + this.thrustBase;
+  *thrust = thrustRaw*thrustScale + thrustBase_adj;
   // Check for minimum thrust
   if (*thrust < this.thrustMin) {
     *thrust = this.thrustMin;
@@ -371,7 +380,9 @@ void velocityControllerInBody(float* thrust, attitude_t *attitude, setpoint_t *s
   // Thrust
   float thrustRaw = runPid(state->velocity.z, &this.pidVZ, setpoint->velocity.z, DT);
   // Scale the thrust and add feed forward term
-  *thrust = thrustRaw*thrustScale + this.thrustBase;
+  battery_voltage = pmGetBatteryVoltage();
+  thrustBase_adj = -6252.62f*battery_voltage + this.thrustBase;
+  *thrust = thrustRaw*thrustScale + thrustBase_adj;
   // Check for minimum thrust
   if (*thrust < this.thrustMin) {
     *thrust = this.thrustMin;
