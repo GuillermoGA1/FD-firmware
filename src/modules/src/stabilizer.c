@@ -172,7 +172,9 @@ void stabilizerInit(StateEstimatorType estimator)
   sensorsInit();
   stateEstimatorInit(estimator);
   controllerInit(ControllerTypeAny);
+#ifndef POWER_MOTORS_AT_STARTUP
   powerDistributionInit();
+#endif 
   collisionAvoidanceInit();
   estimatorType = getStateEstimator();
   controllerType = getControllerType();
@@ -424,18 +426,10 @@ LOG_ADD(LOG_FLOAT, roll, &state.attitude.roll)
 LOG_ADD(LOG_FLOAT, pitch, &state.attitude.pitch)
 LOG_ADD(LOG_FLOAT, yaw, &state.attitude.yaw)
 
-LOG_ADD(LOG_FLOAT, roll_compl, &state.att_compl.roll)
-LOG_ADD(LOG_FLOAT, pitch_compl, &state.att_compl.pitch)
-LOG_ADD(LOG_FLOAT, yaw_compl, &state.att_compl.yaw)
-
 LOG_ADD(LOG_FLOAT, qx, &state.attitudeQuaternion.x)
 LOG_ADD(LOG_FLOAT, qy, &state.attitudeQuaternion.y)
 LOG_ADD(LOG_FLOAT, qz, &state.attitudeQuaternion.z)
 LOG_ADD(LOG_FLOAT, qw, &state.attitudeQuaternion.w)
-LOG_ADD(LOG_FLOAT, qx_aux, &state.attQuaternion_aux.x)
-LOG_ADD(LOG_FLOAT, qy_aux, &state.attQuaternion_aux.y)
-LOG_ADD(LOG_FLOAT, qz_aux, &state.attQuaternion_aux.z)
-LOG_ADD(LOG_FLOAT, qw_aux, &state.attQuaternion_aux.w)
 LOG_GROUP_STOP(stateEstimate)
 
 LOG_GROUP_START(stateEstimateZ)

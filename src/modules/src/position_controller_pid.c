@@ -91,6 +91,7 @@ float setpointvy = 0.0f;
 
 float battery_voltage  = 0.0f;
 float thrustBase_adj = 0.0f;
+//uint16_t thrustBase_adj = 0;
 
 #define DT (float)(1.0f/POSITION_RATE)
 #define POSITION_LPF_CUTOFF_FREQ 5.0f
@@ -172,7 +173,7 @@ static struct this_s this = {
     .pid.dt = DT,
   },
 
-  .thrustBase = 88920,  //27000
+  .thrustBase = 88920,  //88920, 27000
   .thrustMin  = 15000,
 };
 #endif
@@ -232,6 +233,7 @@ void positionControllerInBodySingleLoop(float* thrust, attitude_t *attitude, set
 
   battery_voltage = pmGetBatteryVoltage();
   thrustBase_adj = -6252.62f*battery_voltage + this.thrustBase;
+  //thrustBase_adj = this.thrustBase;
   *thrust = thrustRaw*thrustScale + thrustBase_adj;
   // Check for minimum thrust
   if (*thrust < this.thrustMin) {
@@ -346,6 +348,7 @@ void velocityController(float* thrust, attitude_t *attitude, setpoint_t *setpoin
   // Scale the thrust and add feed forward term
   battery_voltage = pmGetBatteryVoltage();
   thrustBase_adj = -6252.62f*battery_voltage + this.thrustBase;
+  //thrustBase_adj = this.thrustBase;
   *thrust = thrustRaw*thrustScale + thrustBase_adj;
   // Check for minimum thrust
   if (*thrust < this.thrustMin) {
@@ -382,6 +385,7 @@ void velocityControllerInBody(float* thrust, attitude_t *attitude, setpoint_t *s
   // Scale the thrust and add feed forward term
   battery_voltage = pmGetBatteryVoltage();
   thrustBase_adj = -6252.62f*battery_voltage + this.thrustBase;
+  //thrustBase_adj = this.thrustBase;
   *thrust = thrustRaw*thrustScale + thrustBase_adj;
   // Check for minimum thrust
   if (*thrust < this.thrustMin) {
