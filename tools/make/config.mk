@@ -1,3 +1,4 @@
+
 ## Copy this file to config.mk and modify to get you personal build configuration
 ###################################################
 
@@ -6,6 +7,8 @@ PLATFORM = cf2
 #DEFAULT_ESTIMATOR = complementary # use for RC flying
 DEFAULT_ESTIMATOR = kalman  # only works when positioning system is available
 POWER_DISTRIBUTION = nimble_FD_PCB
+
+CFLAGS += -DPOWER_MOTORS_AT_STARTUP
 
 CFLAGS += -DMOTOR_M2_STARTUP=32767
 CFLAGS += -DMOTOR_M3_STARTUP=32767
@@ -26,13 +29,13 @@ CFLAGS += -DDECK_FORCE=bcUSD # force the SD card deck
 # POWER_DISTRIBUTION = nimble_roadrunner
 
 # # Disable UWB 
-# ESTIMATOR = complementary
+# DEFAULT_ESTIMATOR = complementary
 # CFLAGS += -DDISABLE_LOCO_DECK
 # CFLAGS += -DDECK_FORCE=bcBigQuad
 # CFLAGS += -DENABLE_BQ_DECK
 
 # # Enable UWB
-# ESTIMATOR = kalman
+# DEFAULT_ESTIMATOR = kalman
 # # CFLAGS += -DDECK_FORCE=bcBigQuad:bcDWM1000
 # CFLAGS += -DDECK_FORCE=bcBigQuad:bcDWM1000:bcUSD
 # CFLAGS += -DENABLE_BQ_DECK
@@ -46,8 +49,8 @@ CFLAGS += -DDECK_FORCE=bcUSD # force the SD card deck
 
 # ## Setup for CF2 (for debugging only)
 # PLATFORM = cf2
-# # ESTIMATOR = complementary
-# ESTIMATOR = kalman
+# # DEFAULT_ESTIMATOR = complementary
+# DEFAULT_ESTIMATOR = kalman
 # POWER_DISTRIBUTION = stock
 
 # # CFLAGS += -DUSDDECK_USE_ALT_PINS_AND_SPI # enables SD card on alternate pins

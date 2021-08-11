@@ -93,6 +93,7 @@ float setpointvy = 0.0f;
 
 float battery_voltage  = 0.0f;
 float thrustBase_adj = 0.0f;
+//uint16_t thrustBase_adj = 0;
 
 
 #define DT (float)(1.0f/POSITION_RATE)
