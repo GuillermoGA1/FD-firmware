@@ -80,6 +80,8 @@ static const float thrustScale = 1000.0f;
 
 static float kFFx = 0;//10.0; // feedforward term for x direction [deg / m/s]
 static float kFFy = 0; //10.0; // feedforward term for x direction [deg / m/s]
+float kFFx_adj = 0.0f;
+float kFFy_adj = 0.0f;
 
 float bank_roll = 0.0f; // for logging & debugging
 float bank_pitch = 0.0f;
@@ -91,6 +93,7 @@ float setpointvy = 0.0f;
 
 float battery_voltage  = 0.0f;
 float thrustBase_adj = 0.0f;
+
 
 #define DT (float)(1.0f/POSITION_RATE)
 #define POSITION_LPF_CUTOFF_FREQ 5.0f
@@ -115,6 +118,13 @@ bool posZFiltEnable = ZPOSITION_LPF_ENABLE;
 bool velZFiltEnable = ZVELOCITY_LPF_ENABLE;
 float posZFiltCutoff = ZPOSITION_LPF_CUTOFF_FREQ;
 float velZFiltCutoff = ZVELOCITY_LPF_CUTOFF_FREQ;
+
+ ////////////////////////////////////////////////////////////////7
+ // BOOLEAN VALUES TO ACTIVATE DRAG COMPENSATION MODEL AND VOLTAGE
+ // DEPENDENT VARIABLE THRUST
+ ////////////////////////////////////////////////////////////////
+bool drag_compensation = false; 
+bool variableBaseThrust = false;
 
 #ifndef UNIT_TEST
 static struct this_s this = {
@@ -172,7 +182,7 @@ static struct this_s this = {
     .pid.dt = DT,
   },
 
-  .thrustBase = 88920,  //27000
+  .thrustBase = 40000,  
   .thrustMin  = 15000,
 };
 #endif
@@ -230,8 +240,16 @@ void positionControllerInBodySingleLoop(float* thrust, attitude_t *attitude, set
   
   // Scale the thrust and add feed forward term
 
+
   battery_voltage = pmGetBatteryVoltage();
-  thrustBase_adj = -6252.62f*battery_voltage + this.thrustBase;
+  
+  //Choose between constant thrust or variable thrust using the battery voltage
+  if(variableBaseThrust){
+  thrustBase_adj = -6252.62f*battery_voltage + 88920.0f;
+  }
+  else{
+  thrustBase_adj = this.thrustBase;
+  }
   *thrust = thrustRaw*thrustScale + thrustBase_adj;
   // Check for minimum thrust
   if (*thrust < this.thrustMin) {
@@ -330,9 +348,23 @@ void velocityController(float* thrust, attitude_t *attitude, setpoint_t *setpoin
   this.pidVZ.pid.outputLimit = (UINT16_MAX / 2 / thrustScale);
   //this.pidVZ.pid.outputLimit = (this.thrustBase - this.thrustMin) / thrustScale;
 
-  // Roll and Pitch
-  float rollRaw  = runPid(state->velocity.x, &this.pidVX, setpoint->velocity.x, DT) + kFFx*setpoint->velocity.x;
-  float pitchRaw = runPid(state->velocity.y, &this.pidVY, setpoint->velocity.y, DT) + kFFy*setpoint->velocity.y;
+  // Roll and Pitch feedforward terms obtained using attitude/velocity drag compensation model
+  if (drag_compensation){
+    kFFx_adj = -0.32f*(-89.37f + 88.59f*expf(-0.2379f*fabsf(setpoint->velocity.x)-0.001f));
+    kFFy_adj = -0.32f*(-90.0f +56.02f*expf(-0.1654f*fabsf(setpoint->velocity.y)+0.488f));
+    if (setpoint->velocity.x < 0.0f){
+      kFFx_adj = -kFFx_adj;
+      }
+    if (setpoint->velocity.y < 0.0f){
+      kFFy_adj = -kFFy_adj;
+      }
+  }
+  else{
+    kFFx_adj = kFFx*setpoint->velocity.x;
+    kFFy_adj = kFFy*setpoint->velocity.y;
+  }
+  float rollRaw  = runPid(state->velocity.x, &this.pidVX, setpoint->velocity.x, DT) + kFFx_adj;
+  float pitchRaw = runPid(state->velocity.y, &this.pidVY, setpoint->velocity.y, DT) + kFFy_adj;
 
   float yawRad = state->attitude.yaw * (float)M_PI / 180;
   attitude->pitch = -(rollRaw  * cosf(yawRad)) - (pitchRaw * sinf(yawRad));
@@ -345,7 +377,14 @@ void velocityController(float* thrust, attitude_t *attitude, setpoint_t *setpoin
   float thrustRaw = runPid(state->velocity.z, &this.pidVZ, setpoint->velocity.z, DT);
   // Scale the thrust and add feed forward term
   battery_voltage = pmGetBatteryVoltage();
-  thrustBase_adj = -6252.62f*battery_voltage + this.thrustBase;
+ 
+ //Choose between constant thrust or variable thrust using the battery voltage
+ if (variableBaseThrust){
+  thrustBase_adj = -6252.62f*battery_voltage + 88920.0f;
+ }
+ else{
+  thrustBase_adj = this.thrustBase;
+ }
   *thrust = thrustRaw*thrustScale + thrustBase_adj;
   // Check for minimum thrust
   if (*thrust < this.thrustMin) {
@@ -370,9 +409,23 @@ void velocityControllerInBody(float* thrust, attitude_t *attitude, setpoint_t *s
   float vy_body = -state->velocity.x * sinyaw + state->velocity.y * cosyaw;
 
   
-  // Roll and Pitch
-  attitude->pitch = -runPid(vx_body, &this.pidVX, setpoint->velocity.x, DT) - kFFx*setpoint->velocity.x;
-  attitude->roll = -runPid(vy_body, &this.pidVY, setpoint->velocity.y, DT) - kFFy*setpoint->velocity.y;
+   // Roll and Pitch feedforward terms obtained using attitude/velocity drag compensation model
+    if (drag_compensation){
+    kFFx_adj = -0.32f*(-89.37f + 88.59f*expf(-0.2379f*fabsf(setpoint->velocity.x)-0.001f));
+    kFFy_adj = -0.32f*(-90.0f +56.02f*expf(-0.1654f*fabsf(setpoint->velocity.y)+0.488f));
+    if (setpoint->velocity.x < 0.0f){
+      kFFx_adj = -kFFx_adj;
+      }
+    if (setpoint->velocity.y < 0.0f){
+      kFFy_adj = -kFFy_adj;
+      }
+  }
+  else{
+    kFFx_adj = kFFx*setpoint->velocity.x;
+    kFFy_adj = kFFy*setpoint->velocity.y;
+  }
+  attitude->pitch = -runPid(vx_body, &this.pidVX, setpoint->velocity.x, DT) - kFFx_adj;
+  attitude->roll = -runPid(vy_body, &this.pidVY, setpoint->velocity.y, DT) - kFFy_adj;
 
   attitude->roll  = constrain(attitude->roll,  -rLimit, rLimit);
   attitude->pitch = constrain(attitude->pitch, -pLimit, pLimit);
@@ -381,7 +434,14 @@ void velocityControllerInBody(float* thrust, attitude_t *attitude, setpoint_t *s
   float thrustRaw = runPid(state->velocity.z, &this.pidVZ, setpoint->velocity.z, DT);
   // Scale the thrust and add feed forward term
   battery_voltage = pmGetBatteryVoltage();
-  thrustBase_adj = -6252.62f*battery_voltage + this.thrustBase;
+
+//Choose between constant thrust or variable thrust using the battery voltage
+  if(variableBaseThrust){
+  thrustBase_adj = -6252.62f*battery_voltage + 88920.0f;
+  }
+  else{
+  thrustBase_adj = this.thrustBase;
+  }
   *thrust = thrustRaw*thrustScale + thrustBase_adj;
   // Check for minimum thrust
   if (*thrust < this.thrustMin) {
@@ -451,6 +511,8 @@ LOG_ADD(LOG_FLOAT, VZp, &this.pidVZ.pid.outP)
 LOG_ADD(LOG_FLOAT, VZi, &this.pidVZ.pid.outI)
 LOG_ADD(LOG_FLOAT, VZd, &this.pidVZ.pid.outD)
 
+LOG_ADD(LOG_FLOAT, thrustBase, &thrustBase_adj)
+
 // LOG_ADD(LOG_FLOAT, VXp, &bank_pitch)
 // LOG_ADD(LOG_FLOAT, VZp, &bank_roll)
 
@@ -491,6 +553,7 @@ PARAM_ADD(PARAM_FLOAT, zKd, &this.pidZ.pid.kd)
 
 PARAM_ADD(PARAM_UINT16, thrustBase, &this.thrustBase)
 PARAM_ADD(PARAM_UINT16, thrustMin, &this.thrustMin)
+//PARAM_ADD(PARAM_INT8, VariableBaseThrustEn, &variableBaseThrust)
 
 PARAM_ADD(PARAM_FLOAT, rpLimit,  &rpLimit)
 PARAM_ADD(PARAM_FLOAT, rLimit,  &rLimit)
@@ -500,7 +563,7 @@ PARAM_ADD(PARAM_FLOAT, zVelMax,  &zVelMax)
 PARAM_ADD(PARAM_FLOAT, xBodyVelMax, &xBodyVelMax)
 PARAM_ADD(PARAM_FLOAT, yBodyVelMax, &yBodyVelMax)
 
-PARAM_ADD(PARAM_INT8, singleLoop, &singleLoop)
+//PARAM_ADD(PARAM_INT8, singleLoop, &singleLoop)
 
 
 PARAM_GROUP_STOP(posCtlPid)

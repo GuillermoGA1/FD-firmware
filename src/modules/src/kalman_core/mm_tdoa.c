@@ -40,11 +40,13 @@ void kalmanCoreUpdateWithTDOA(kalmanCoreData_t* this, tdoaMeasurement_t *tdoa)
      */
 
     float measurement = tdoa->distanceDiff;
-    int iter_count = 0;
-    float epsilon = 1e-10;
+    int iter_count = 0;  //counter of iterations
+    float epsilon = 1e-10;  //error threshold to exit loop
     float iter_error = 2*epsilon;
     kalmanCoreData_t *eta1 = this;
     kalmanCoreData_t *eta = eta1;
+
+    //Loop the update of the UWB measurement
     while (iter_error > epsilon && iter_count < 25)
     {
 
@@ -91,19 +93,22 @@ void kalmanCoreUpdateWithTDOA(kalmanCoreData_t* this, tdoaMeasurement_t *tdoa)
         };
 
         bool sampleIsGood = outlierFilterValidateTdoaSteps(tdoa, error, &jacobian, &estimatedPosition);
+        //Logic to assign the variable sensor noise term 
         if (sampleIsGood) {
-          if(z > 1.0f){
-            kalmanCoreScalarUpdate(eta1, &H, error, 0.8f*tdoa->stdDev);
+          if(z >= 1.0f){
+            kalmanCoreScalarUpdate(eta1, &H, error, 0.5f*tdoa->stdDev);
           }
           else{
+            if(z > 0.5f){
+              kalmanCoreScalarUpdate(eta1, &H, error, (1.5f-z)*tdoa->stdDev);
+            }
+            else{
             kalmanCoreScalarUpdate(eta1, &H, error, tdoa->stdDev);
+            }
           }
         }
         
-        /*eta1->S[KC_STATE_X] = this->S[KC_STATE_X] + eta->K_vector[KC_STATE_X] * (error - h[KC_STATE_X]*(this->S[KC_STATE_X]-eta->S[KC_STATE_X]));
-        eta1->S[KC_STATE_Y] = this->S[KC_STATE_Y] + eta->K_vector[KC_STATE_Y] * (error - h[KC_STATE_Y]*(this->S[KC_STATE_Y]-eta->S[KC_STATE_Y]));
-        eta1->S[KC_STATE_Z] = this->S[KC_STATE_Z] + eta->K_vector[KC_STATE_Z] * (error - h[KC_STATE_Z]*(this->S[KC_STATE_Z]-eta->S[KC_STATE_Z])); */
-
+        //Calculate current estimate and compare it against the estimate of the previous iteration to get the error
         float eta_norm = sqrtf(powf(eta->S[KC_STATE_X],2) + powf(eta->S[KC_STATE_Y],2) + powf(eta->S[KC_STATE_Z],2));
         float eta1_norm = sqrtf(powf(eta1->S[KC_STATE_X],2) + powf(eta1->S[KC_STATE_Y],2) + powf(eta1->S[KC_STATE_Z],2)); 
         iter_error = fabsf(eta1_norm - eta_norm)/ fabsf(eta_norm); 
@@ -111,10 +116,8 @@ void kalmanCoreUpdateWithTDOA(kalmanCoreData_t* this, tdoaMeasurement_t *tdoa)
       eta = eta1;
       iter_count ++;
     }
-    /*for (int i=0; i<KC_STATE_DIM; i++) {
-      for (int j=i; j<KC_STATE_DIM; j++) {
-        eta1->P[i][j] = eta->P[i][j];
-        }} */
+
+    //Assign the current estimate before going into next iteration
     this = eta1;
   }
   
